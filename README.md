@@ -1,18 +1,21 @@
 # Document Access Grant Service
 
-Backend service for managing temporary document sharing grants.
+Async backend service for managing temporary document access grants using FastAPI and PostgreSQL.
 
 ---
 
 # Tech Stack
 
+* Python 3.13
 * FastAPI
 * PostgreSQL
-* SQLAlchemy
+* SQLAlchemy 2.0 (async)
+* asyncpg
 * Alembic
+* Pydantic v2
 * Docker
 * Pytest
-* Async SQLAlchemy
+* pytest-asyncio
 
 ---
 
@@ -21,12 +24,23 @@ Backend service for managing temporary document sharing grants.
 * Create temporary document access grants
 * Prevent duplicate active grants
 * Revoke grants
-* Check grant active status
-* PostgreSQL schema management
-* Alembic migrations
-* Dockerized PostgreSQL
-* Async database operations
-* Automated API tests
+* Check active grant status
+* Async PostgreSQL integration
+* Alembic migration support
+* Dockerized PostgreSQL setup
+* Deterministic seed data
+* Automated API testing
+* Layered backend architecture
+
+---
+
+# Business Rules Implemented
+
+* Expiry must be at least 1 minute in the future
+* Only one active grant per grantee/document pair
+* Only creator can revoke grants
+* Cannot revoke expired or already revoked grants
+* Inactive grants remain permanently stored
 
 ---
 
@@ -35,6 +49,7 @@ Backend service for managing temporary document sharing grants.
 ```text
 document-access-grant-service/
 │
+├── alembic/
 ├── app/
 │   ├── api/
 │   ├── db/
@@ -43,12 +58,12 @@ document-access-grant-service/
 │   ├── services/
 │   └── main.py
 │
-├── alembic/
 ├── tests/
 ├── docker-compose.yml
 ├── requirements.txt
 ├── pytest.ini
-└── README.md
+├── README.md
+└── SOLUTION.md
 ```
 
 ---
@@ -58,7 +73,7 @@ document-access-grant-service/
 ## 1. Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/swaraj03-alt/document-access-grant-service.git
 cd document-access-grant-service
 ```
 
@@ -69,8 +84,6 @@ cd document-access-grant-service
 ```bash
 python -m venv .venv
 ```
-
-Activate environment:
 
 ### Windows
 
@@ -88,7 +101,7 @@ pip install -r requirements.txt
 
 ---
 
-## 4. Start PostgreSQL with Docker
+## 4. Start PostgreSQL
 
 ```bash
 docker compose up -d
@@ -96,7 +109,7 @@ docker compose up -d
 
 ---
 
-## 5. Run Database Migrations
+## 5. Run Alembic Migrations
 
 ```bash
 alembic upgrade head
@@ -104,7 +117,7 @@ alembic upgrade head
 
 ---
 
-## 6. Seed Initial Data
+## 6. Seed Database
 
 ```bash
 python -m app.seed
@@ -120,7 +133,7 @@ uvicorn app.main:app --reload
 
 ---
 
-# Swagger API Documentation
+# Swagger Documentation
 
 Open:
 
@@ -132,68 +145,17 @@ http://127.0.0.1:8000/docs
 
 # API Endpoints
 
-## Create Grant
-
-```http
-POST /grants
-```
-
-Creates a new temporary document access grant.
-
----
-
-## List Grants
-
-```http
-GET /grants
-```
-
-Returns all grants.
+| Method | Endpoint                 | Description               |
+| ------ | ------------------------ | ------------------------- |
+| POST   | /grants                  | Create grant              |
+| GET    | /grants                  | List grants               |
+| GET    | /grants/{grant_id}       | Get single grant          |
+| DELETE | /grants/{grant_id}       | Revoke grant              |
+| GET    | /grants/{grant_id}/check | Check grant active status |
 
 ---
 
-## Get Grant By ID
-
-```http
-GET /grants/{grant_id}
-```
-
-Returns a specific grant.
-
----
-
-## Revoke Grant
-
-```http
-DELETE /grants/{grant_id}
-```
-
-Revokes an active grant.
-
----
-
-## Check Grant Status
-
-```http
-GET /grants/{grant_id}/check
-```
-
-Checks whether a grant is currently active.
-
----
-
-# Business Rules
-
-* Grant expiry must be at least 1 minute in the future
-* Duplicate active grants are not allowed
-* Revoked grants become inactive immediately
-* Expired grants are automatically treated as inactive
-
----
-
-# Database
-
-## PostgreSQL Schema
+# PostgreSQL Schema
 
 ```text
 grants_svc
@@ -207,7 +169,7 @@ grants_svc
 
 ---
 
-# Seeded Data
+# Seed Data
 
 ## Users
 
@@ -237,13 +199,27 @@ The application follows a layered backend architecture:
 
 * API Layer → FastAPI routes
 * Service Layer → business logic
-* Database Layer → SQLAlchemy ORM
-* Persistence Layer → PostgreSQL
+* ORM Layer → SQLAlchemy async models
+* Persistence Layer → PostgreSQL database
 
 This separation improves maintainability, scalability, and testability.
 
 ---
 
-# Author
+# Assignment Completion Checklist
 
-Backend Take-Home Assignment Submission
+* FastAPI backend implemented
+* PostgreSQL + Docker setup completed
+* Alembic migrations included
+* Async SQLAlchemy integration completed
+* Business validation rules implemented
+* REST endpoints completed
+* Seed data added
+* Automated tests added
+* README and SOLUTION documentation included
+
+---
+
+# Repository
+
+https://github.com/swaraj03-alt/document-access-grant-service
