@@ -91,6 +91,13 @@ async def get_grant_by_id(
 
     return grant
 
+creator_id = UUID("11111111-1111-1111-1111-111111111111")
+
+if grant.grantor_id != creator_id:
+    raise HTTPException(
+        status_code=403,
+        detail="Only creator can revoke grant"
+    )
 async def revoke_grant(
     session: AsyncSession,
     grant_id: UUID
@@ -101,10 +108,26 @@ async def revoke_grant(
         grant_id
     )
 
+    creator_id = UUID(
+        "11111111-1111-1111-1111-111111111111"
+    )
+
+    if grant.grantor_id != creator_id:
+        raise HTTPException(
+            status_code=403,
+            detail="Only creator can revoke grant"
+        )
+
     if grant.revoked_at:
         raise HTTPException(
             status_code=400,
             detail="Grant already revoked"
+        )
+
+    if grant.expires_at <= datetime.now():
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot revoke expired grant"
         )
 
     grant.revoked_at = datetime.now()
